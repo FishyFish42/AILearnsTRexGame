@@ -12,26 +12,30 @@ import java.util.Random;
 public class DinoGameTraining extends JPanel implements KeyListener, Runnable { 
 
     // Game constants
-    private static final int WIDTH = 800;
-    private static final int HEIGHT = 300;
-    private static final int GROUND_Y = 250;
-    private static final int DINO_WIDTH = 40;
-    private static final int DINO_HEIGHT = 40;
-    private static final int OBSTACLE_WIDTH = 15;
+    public static final int WIDTH = 800;
+    public static final int HEIGHT = 300;
+    public static final int GROUND_Y = 250;
+    public static final int DINO_WIDTH = 40;
+    public static final int DINO_HEIGHT = 40;
+    public static final int OBSTACLE_WIDTH = 15;
     public static final int OBSTACLE_HEIGHT = 40;
-    public int FPS = 500000;
+    public static final int AI_FPS = 1000000;
+    public static final int PLAYER_FPS = 60;
+    public boolean humanPlayer;
+    public int FPS;
     
-    // Dino position and velocity
-    private double dinoX = 50;
-    private double dinoY = GROUND_Y - DINO_HEIGHT;
-    private double velocityY = 0;
+    // Universal Dino variables
     private double velocityX = 4;
-    private double isJumping = 0;
-    private double isCrouching = 0;
+    private double dinoX = 50;
+    public int totalPopulation;
+    
+    //Independent Dino storage
+    List<dinoPlayer> dinoStorage = new ArrayList<>();
 
     // Game state
+    public int livingCount;
     public boolean gameOver = false;
-    public int score = 0;
+    public int realScore = 0;
     public volatile int drawCount = 0;
     public int syncCount = 1;
     private double runTime = 0;
@@ -51,19 +55,46 @@ public class DinoGameTraining extends JPanel implements KeyListener, Runnable {
     private double height2 = 40;
 
     //Data storage for passing
-    public List<Double> data = Arrays.asList(velocityX, velocityY, dist1, dist2, height1, height2, dinoY); //This MUST be before Util object creation
+    public List<Double> data = Arrays.asList(velocityX, dist1, dist2, height1, height2); //This MUST be before Util object creation
+    //Additional Variables within dinoStorage: velocityY, dinoY
     
-    //Objects
+  //Objects
     Thread gameThread;
-    Util util = new Util(this);
+    Util util;
     
-    public DinoGameTraining() {
+    //Constructor. Must be done before Util Object creation
+    public DinoGameTraining(int childPopulation, boolean humanPlayer, int playerPopulation) {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(Color.WHITE);
         setFocusable(true);
         addKeyListener(this);
+        
+        this.humanPlayer = humanPlayer;
+        
+        if(humanPlayer == false) {
+        	totalPopulation = childPopulation;
+        	livingCount = childPopulation;
+        	FPS = AI_FPS;
+        	for(int i = 0; i < totalPopulation; i++) {
+            	dinoPlayer dino = new dinoPlayer();
+            	dinoStorage.add(dino);
+            }
+        	System.out.println(this.humanPlayer);
+        	System.out.println("you bum");
+        }else if (humanPlayer == true){
+        	totalPopulation = playerPopulation;
+        	livingCount = playerPopulation;
+        	FPS = PLAYER_FPS;
+        	for(int i = 0; i < totalPopulation; i++) {
+            	dinoPlayer dino = new dinoPlayer();
+            	dinoStorage.add(dino);
+            }
+        	System.out.println(this.humanPlayer);
+        	System.out.println("you not a bum");
+        }
+        
+        util = new Util(this);
     }
-
     
     public void startGameThread() {
     	gameThread = new Thread(this);
@@ -92,11 +123,20 @@ public class DinoGameTraining extends JPanel implements KeyListener, Runnable {
 				if(!gameOver) {
 					updateGame(); 
 					
-					data = Arrays.asList(velocityX, velocityY, dist1, dist2, height1, height2, dinoY);
+					data = Arrays.asList(velocityX, dist1, dist2, height1, height2);
 				}
-				util.connector(this);
-				// 2. DRAW - replaces all on screen visuals with new ones to reflect the updated changes
-				//repaint();
+				
+				
+				if(humanPlayer == true) {
+					// 2. DRAW - replaces all on screen visuals with new ones to reflect the updated changes
+					
+					repaint();
+				}else {
+					// 2. AI - connects to network if no human is playing
+					util.connector(this);
+				}
+				
+				
 				delta--;
 				drawCount++; //counts how many times we draw
 			}	
@@ -116,21 +156,26 @@ public class DinoGameTraining extends JPanel implements KeyListener, Runnable {
 	//
     public void updateGame() {
     	
-        // Move obstacles
+        // Move obstacles and check collision
         Iterator<Rectangle> it = obstacles.iterator();
         while (it.hasNext()) {
             Rectangle obs = it.next();
             obs.x -= velocityX;
             if (obs.x + OBSTACLE_WIDTH < 0) {
                 it.remove();
-                score++;
+                realScore++;
             }
-            // Collision detection
-            if (obs.intersects(new Rectangle((int) dinoX, (int) dinoY, DINO_WIDTH, DINO_HEIGHT))) {
-                gameOver = true;
-            }			
+            // Collision detection 
+            for(dinoPlayer d : dinoStorage) {
+            	if (obs.intersects(new Rectangle((int) dinoX, (int) d.dinoY, DINO_WIDTH, DINO_HEIGHT))) {
+                    d.isAlive = false;
+                    livingCount--;
+            	}
+            }
         }
 
+        //check if all players are dead
+        if(livingCount <= 0) gameOver = true;
         
         // Spawn new obstacles
         if (obstacles.isEmpty() || obstacles.get(obstacles.size() - 1).x < WIDTH - 175) {
@@ -174,19 +219,10 @@ public class DinoGameTraining extends JPanel implements KeyListener, Runnable {
             dist2 = 800;
         }
      
-        
      // Apply gravity
-        if (isJumping == 1) {
-        	if(isCrouching == 1) {
-        		velocityY += 3;
-        	}else {velocityY += 0.85;}
-            dinoY += velocityY;
-            
-            if (dinoY >= GROUND_Y - DINO_HEIGHT) {
-                dinoY = GROUND_Y - DINO_HEIGHT;
-                isJumping = 0;
-                velocityY = 0;}
-        }
+       for(dinoPlayer d : dinoStorage) {
+    	   if(d.isAlive) d.gravity();
+       }
     }
 
     @Override
@@ -199,7 +235,7 @@ public class DinoGameTraining extends JPanel implements KeyListener, Runnable {
 
         // Draw dino
         g.setColor(Color.GREEN);
-        g.fillRect((int) dinoX,(int) dinoY, DINO_WIDTH, DINO_HEIGHT); 
+        g.fillRect((int) dinoX,(int) dinoStorage.get(0).dinoY, DINO_WIDTH, DINO_HEIGHT); 
         
         // Draw obstacles
         g.setColor(Color.RED);
@@ -210,7 +246,7 @@ public class DinoGameTraining extends JPanel implements KeyListener, Runnable {
         // Draw score
         g.setColor(Color.BLACK);
         g.setFont(new Font("Arial", Font.BOLD, 16));
-        g.drawString("Score: " + score, 10, 20);
+        g.drawString("Score: " + realScore, 10, 20);
 
         // Game over text
         if (gameOver) {
@@ -223,33 +259,29 @@ public class DinoGameTraining extends JPanel implements KeyListener, Runnable {
     public void keyPressed(KeyEvent e) {
         
     	if (!gameOver) {
-    		if (e.getKeyCode() == KeyEvent.VK_SPACE && isJumping == 0) {
-    			isJumping = 1;
-    			velocityY = -15; // jump strength
+    		if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+    			dinoStorage.get(0).jump();
     		} 
     		if (e.getKeyCode() == KeyEvent.VK_S) {
-    			isCrouching = 1;
+    			dinoStorage.get(0).crouch();
     		}else {
-    			isCrouching = 0;
-    			}
-    		
+    			dinoStorage.get(0).uncrouch();
+    		}
     	}else if(gameOver && e.getKeyCode() == KeyEvent.VK_ENTER) {
 			restartGame();
 		}
-        
-        
     }
 
     public void restartGame() {
         gameOver = false;
-        score = 0;
-        dinoY = GROUND_Y - DINO_HEIGHT;
-        velocityY = 0;
-        isJumping = 0;
-        isCrouching = 0;
+        realScore = 0;
         obstacles.clear();
         velocityX = 4;
         runTime = 0;
+        livingCount = totalPopulation;
+        for(dinoPlayer d : dinoStorage) {
+        	d.resetValues();
+        }
     }
 
     @Override

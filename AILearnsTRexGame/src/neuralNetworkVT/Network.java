@@ -63,7 +63,7 @@ public class Network {
 		neurons = new ArrayList<>();
 	}
 	
-	public void train(int epoch) {
+	public void train() {
 
 	    int mutationsThisEpoch;
 
@@ -107,9 +107,9 @@ public class Network {
 	    return copy;
 	}
 	
-	public void evaluate(DinoGameTraining game, Network childNetwork) {
-		if (game.score > bestScore) {
-	        bestScore = game.score;
+	public void evaluate(int count, DinoGameTraining game, Network childNetwork) {
+		if (game.dinoStorage.get(count).score > bestScore) {
+	        bestScore = game.dinoStorage.get(count).score;
 	        System.out.println("New Best Epoch: " + bestScore);
 
 	        this.neurons = new ArrayList<>();
