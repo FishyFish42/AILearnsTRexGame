@@ -1,26 +1,132 @@
 package neuralNetworkVT;
 
-/*	V6 - Changelog:
- * 	This version functions identically to the last one with a single exception.
- * 	This version's neural network is dynamic in size as opposed to previous versions' hardcoded network sizes
- * 	i.e. we can change the size of the neural network(# of neurons, # of layers, # of outputs) 
+/* V7 - Changelog:
+ * No big changes to the neural network inner workings this time. This update is paving the way for and implementing a child network population
+ * This updates changes the way that the network interacts with the dinoGame as well as changes how the back end dinoGame functions to make this work 
+ * 	
+ * My intent with this update is to keep the dinoGame playable by me while simultaneously allowing me to implement a population of networks AND make it run faster
+ * 	
+ * Goals:
+ * 		- Update the method that user inputs are taken and ran (back end updates within dinoGame)
+ * 		- Ditching the RoboGoon object from the Util class
+ * 			i. this will allow the program to run exponentially faster than before as robots eat computer resources faster than David can bulk
+ * 		- Allow dinoGame to handle multiple childNetworks at once (will also allow human controlled multi-player later)
+ * 		- create and implement multiple child networks
+ * 		- allow toggle between playing the game in person and running the network (this one isn't necessary for the AI but allows me to mess around if i'm showing off to friends
+ *  	
+ * Firstly, back end dinoGame input updates.
+ * Part 1 edits:
+ * 		- Added functions "jump", "crouch", and "uncrouch" in dinoGame
+ * 			i. these functions will be what's called to actually make the player jump or crouch
+ * 		- Updated keyPressed function (user input) to call new Jump and Crouch functions instead of manually doing the actions
+ * 			i. this allows key presses to still work while allowing the network to call functions instead of having to press keystrokes
+ * 		- Updated Util connector logic
+ * 			i. updated the predict function interpreter to call on jump or crouch functions rather than robot key presses
+ * 			ii. removed all other instances of robots and key-presses from Util class 
+ * 				a. constructor
+ * 				b. prediction
+ * 				c. instantiation and declaration
+ * 				d. import headers java.awt.AWTException, import java.awt.Robot, and java.awt.event.KeyEvent.
  * 
- * 	To do this, go to the Util class and look for the "layerSizes" list variable
- * 	for each extra number you add to the list, another layer will be added
- * 	the network will create neurons equal to the number you put for that layer
+ * Secondly, enabling multiple child classes to play the game at once
+ * I have 2 ideas on how to do this:
+ * 		- Create multiple instances of the game and have each child class play their respective game simultaneously
+ * 			i. Resource intensive
+ * 			ii. Would require that I move the main deepCopying/evaluation logic from Util to RunningTest to ensure some logic remains outside of the training loop
+ * 				a. I.E. repurpose RunningTest and Util to serve slightly different roles
+ * 		- Allow multiple players to play the same dinoGame at the same time
+ * 			i. likely less resource intensive
+ * 			ii. requires restructuring of dinoGame variable logic to support multiple players
+ * 			iii. allow util to support and connect dinoGame to multiple child classes
+ * 			iv. will likely require me to resort to object oriented programming for the dino game to distinguish between players
  * 
- * 	The first layer will always have a number of inputs equal to the total number of data points outputed by the normalization function in Util (in this case, 8)
- * 	Each subsequent layer will have each neuron from the previous layer passed in
- * 	The last layer is always the output layer. For the sake of this model, that should ALWAYS be 2
+ * I am going to do the second route. Mostly because it would be fun to do multiplayer dinoGame with a friend lol
+ * also because its nicer on my sub-par computer
  * 
- * 	The predictJump and predictCrouch functions in the Network class still have the output variables hardcoded. 
- * 	Ensure that the last number of the layerSizes list is always 2
+ * Part 2 edits: this one is gonna be tough
+ * 		- Created dinoPlayer class to individualize each player
+ * 		- Moved a variaty of functions and variables to the dinoPlayer class and added some extra stuff in the process
+ * 			i. Moved Variables - dinoY, velocityY, isJumping, isCrouching
+ * 				a. added score to dinoPlayer and changed DinoGame.score to realScore
+ * 				b. changed references to the score into realScore within the evaluation function in the Network class
+ * 				c. created an "isAlive" variable to track the gameOver Status of each player individually
+ * 			ii. Moved Functions - gravity (from updateGame), jump, crouch, uncrouch
+ * 			iii. added resetValues function in dinoPlayer. Will replace value reseting in the restartGame function.
+ * 		- Added "childPopulationSize" variable to RunningTest for users to choose size of population
+ * 		- Added a few local variables within DinoGame to help keep track of game and player status'
+ * 			i. totalPopulation
+ * 				a. locally stores the values of population sizes from RunningTest in the dinoGame class (in constructor, read below notes)
+ * 			ii. livingCount - keeps track of how many players are still alive (for gameOver logic)
+ * 			iii. dinoStorage - List<dinoPlayer> to store dinoPlayer objects.
+ * 		- Updated dinoGame constructor to create the players
+ * 			i. dinoGame constructor now imports childPopulationSize and locally assigns the value to totalPopulation
+ * 			ii. uses a for loop to create a totalPopulationSize number of dinoPlayer and stores them within dinoStorage
+ * 		- Updated various dinoClass functions to reference dinoStorage players rather than the previously hard coded player values
+ * 			i. these all run on a for each loop to run through each player
+ * 			ii. Collision detection within gameUpdate()
+ * 				a. also updates livingCount as collisions are detected
+ * 			    b. also added check within gameUpdate to check if all players are still alive (checks livingCount <= 0)
+ * 			iv. gravity logic within gameUpdate
+ * 			v. restart game function now calls dinoPlayer.resetValues in a for loop.
+ * 		
+ * Now, I am fixing the Util class to allow it properly connect between the game and the network and to properly integrate a child population.	
+ * Part 3:
+ * 		-  fixed the new data passing bugs between dinoGame and Util
+ * 			i. some data(velocityY and dinoY) are different for each player.
+ * 			ii. connector now runs on a for loop while game is running to compute each player
+ * 				a. creates list, fills list with normalized values, pass values into predict function, forget the list, repeat											
+ * 			iii. normalized data is still stored in a List<Double> within the connector, but normalization function now called once for each individual player
+ * 				a. Normalization function now imports int number storing the current player number that the game is processing
+ * 				b. normalization function now takes that data directly from the dinoStorage that is specific for each player (dinoY, velocityY)
+ * 				c. references to game.data now reference the new correct data values
+ * 					- data is now 5 values long instead of 7, adjusted the references to reflect this
+ * 					- dinoY and velocityY were removed from the list and are taken straight from dinoStorage
+ * 			iv. This now properly connects the two classes
+ * 				a. each of the children are controlled by the Util class connector
+ * 				b. HOWEVER, they are all controlled by the same childNetwork (read below for the fix)
+ * 					- program has only created a single child network thus far
+ * 		- added the creation and recreation of the child network population.
+ * 			i. created a list "eipsteinsIsland" to store various child networks as they are created
+ * 				a. initialized in constructor			
+ * 				b. list is recreated each epoch in gameOver segment of the connector function
+ * 			ii. for loops to fill eipsteinsIsland with child population.
+ * 				a. runs game.childPopulation number of times (number is decided in RunningTest class by the user)
+ * 			iii. removed the old "Network childNetwork;" declaration that was used in the previous version
+ * 		- updated the connector function to connect the correct childNetwork to the appropriate dinoPlayer
+ * 			i. now references eipsteinsIsland for the child networks
+ * 		- edited the evaluation call in Util to evaluate each child and choose the best model of all those evaluated
+ * 			i. evaluates them one at a time
+ * 			ii. only keeps a model if it does better than the original/last saved model evaluated before it
+ * 			iii. Edited evaluation function within Network class to pull the best scores from their respective dinoPlayer stored in dinoStorage
+ * 
+ * Lastly, adding the toggle to allow humans to play instead of hooking it up to ai.
+ * 		- added variables to RunningTestClass 
+ * 			i. HUMAN_PLAYER - boolean asking user if they are playing the game or not
+ * 			ii. PLAYER_POPULATION_SIZE - how many human players are there
+ * 				a. This variable will be kept equal to 1 indefinitely until a future update to dino game if I decide to integrate human multiplayer
+ * 		- Updated dinoGame constructor and the initiation within RunningTest to include importing these two variables
+ * 			i. while it might be beneficial to condense player and child populations into one variable and change the value when I change the HUMAN_PLAYER value, 
+ * 				this allows the user (me) the convenience of not having to change those numbers for now
+ * 				
+ * 
+ * Additional Bug fixes with this updates
+ * 		- fixed Network.train to no longer import epoch as it wasn't needed in the previous or current 
+ * 			i. also updated the references to the function within the Util class
+ * 		- fixed issue with if statements assigning values rather than comparing values (= vs ==)
+ * 		- 
+ * 			
+ * 
  */
 import javax.swing.JFrame;
 
 public class RunningTest{
 	
-	static DinoGameTraining game = new DinoGameTraining();
+	static final int CHILD_POPULATION_SIZE = 10;
+	static final boolean HUMAN_PLAYER = false;
+	static final int PLAYER_POPULATION_SIZE = 1; //keep this as 1 for now (multiplayer MIIIGHT be added at a later date)
+	
+	static DinoGameTraining game = new DinoGameTraining(CHILD_POPULATION_SIZE, HUMAN_PLAYER, PLAYER_POPULATION_SIZE);
+	//static DinoGameTraining game = new DinoGameTraining();
 	
 	public static void main(String[] args) {
 		
