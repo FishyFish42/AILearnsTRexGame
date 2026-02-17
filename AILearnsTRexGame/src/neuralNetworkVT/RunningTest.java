@@ -68,6 +68,10 @@ package neuralNetworkVT;
  * 			    b. also added check within gameUpdate to check if all players are still alive (checks livingCount <= 0)
  * 			iv. gravity logic within gameUpdate
  * 			v. restart game function now calls dinoPlayer.resetValues in a for loop.
+ * 		- Added score increment within the update game function
+ * 			i. score/bestScore are now calculated in pixels and not in score
+ * 			ii. this helps the system choose the best child model of the ten
+ * 			iii. only increments if the player is alive
  * 		
  * Now, I am fixing the Util class to allow it properly connect between the game and the network and to properly integrate a child population.	
  * Part 3:
@@ -94,6 +98,8 @@ package neuralNetworkVT;
  * 			iii. removed the old "Network childNetwork;" declaration that was used in the previous version
  * 		- updated the connector function to connect the correct childNetwork to the appropriate dinoPlayer
  * 			i. now references eipsteinsIsland for the child networks
+ * 			ii. Added conditional statement before the predictor functions to check if the networks corresponding player is alive or dead
+ * 				a. only predicts if the player is alive
  * 		- edited the evaluation call in Util to evaluate each child and choose the best model of all those evaluated
  * 			i. evaluates them one at a time
  * 			ii. only keeps a model if it does better than the original/last saved model evaluated before it
@@ -109,11 +115,20 @@ package neuralNetworkVT;
  * 				this allows the user (me) the convenience of not having to change those numbers for now
  * 				
  * 
+ * Bug fixing time
+ * 
  * Additional Bug fixes with this updates
  * 		- fixed Network.train to no longer import epoch as it wasn't needed in the previous or current 
  * 			i. also updated the references to the function within the Util class
  * 		- fixed issue with if statements assigning values rather than comparing values (= vs ==)
- * 		- 
+ * 		- Moved filePath variable creation to be within the save reader within the network class so each child network does not also 
+ * 			create these unneeded variables
+ * 		- changed the thresholds of the numberOfMutations within the Network class
+ * 			i. <20 score for 6 mutations
+ * 			ii. <50 score for 3 mutations
+ * 			iii. >=50 score for 1 mutation
+ * 			iv. this is simply to help the system make its first big jumps on this program. It is unlikely that it will ever surpass 50 score any time soon
+ * 				a. I can barely get past 50 score and I have timing, but as a computer it could definitely do better than me once trained
  * 			
  * 
  */

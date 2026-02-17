@@ -2,6 +2,7 @@ package neuralNetworkVT;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Util {
 
@@ -11,7 +12,7 @@ public class Util {
 
 	//USER CHANGEABLE VARIABLES
 	//ALWAYS double check these before starting.
-	int maxEpoch = 1000;
+	int maxEpoch = 100;
 	int[] layerSizes = {8, 8, 2}; 							//Last number must ALWAYS be the number of outputs (2)(jump and crouch). Also be aware of the number of inputs into the system.
 	
 	//String saveFilePath = "bestEpochV2.txt"; 				//Only needed if going off of a save file. This is broken in this version
@@ -58,17 +59,19 @@ public class Util {
 			
 				for(int i = 0; i < game.dinoStorage.size(); i++) {
 					//data normalization
-					List<Double> dataNorm = normalization(game, i);
+					if(game.dinoStorage.get(i).isAlive == true) {
+						List<Double> dataNorm = normalization(game, i);
 					
-					//child network chooses whether to jump, then this relays it to the game.
-					if (eipsteinsIsland.get(i).interpretPred(eipsteinsIsland.get(i).predictJump(dataNorm, layerSizes)) == 1) {
-						game.dinoStorage.get(i).jump();}
+						//child network chooses whether to jump, then this relays it to the game.
+						if (eipsteinsIsland.get(i).interpretPred(eipsteinsIsland.get(i).predictJump(dataNorm, layerSizes)) == 1) {
+							game.dinoStorage.get(i).jump();}
 				
-					//child network chooses whether to crouch, then this relays it to the game
-					if (eipsteinsIsland.get(i).interpretPred(eipsteinsIsland.get(i).predictCrouch(dataNorm, layerSizes)) == 1) {
-						game.dinoStorage.get(i).crouch();
-					}else {
-						game.dinoStorage.get(i).uncrouch();}
+						//child network chooses whether to crouch, then this relays it to the game
+						if (eipsteinsIsland.get(i).interpretPred(eipsteinsIsland.get(i).predictCrouch(dataNorm, layerSizes)) == 1) {
+							game.dinoStorage.get(i).crouch();
+						}else {
+							game.dinoStorage.get(i).uncrouch();}
+					}
 				}
 				
 			//if the player has lost the game

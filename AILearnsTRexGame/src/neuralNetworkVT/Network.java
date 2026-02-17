@@ -7,17 +7,13 @@ import java.util.List;
 import java.util.Random;
 
 public class Network {
-
+	
 	Random random = new Random();
 	
 	List<List<Neuron>> neurons;  		//2D list of Neurons, a list of lists
 	
 	Integer bestScore = 0;
 	int numOfInputs;
-	
-	//Post epochs, this saves the progress of the run.
-	String filePath = "bestEpochV1.txt";
-	String filePath2 = "bestEpochV2.txt";
 	
 	//no save imported
 	public Network(int numOfInputs, int[] layerSizes) {
@@ -67,9 +63,9 @@ public class Network {
 
 	    int mutationsThisEpoch;
 
-	    if (bestScore == null || bestScore < 100) {
+	    if (bestScore == null || bestScore < 1000) {
 	        mutationsThisEpoch = 6;
-	    } else if (bestScore < 1000) {
+	    } else if (bestScore < 5000) {
 	        mutationsThisEpoch = 3;
 	    } else {
 	        mutationsThisEpoch = 1;
@@ -181,6 +177,11 @@ public class Network {
 	//This records the information about the best epoch data to a text file for later use
 	//when the program is rerun, this text file will be overwritten. Be sure to save it
 	public void recordBest(int[] layerSizes) {
+		
+		//Post epochs, this saves the progress of the run.
+		String filePath = "bestEpochV1.txt";
+		String filePath2 = "bestEpochV2.txt";
+		
 		// Use try-with-resources to automatically close the FileWriter
 		//This version readable by humans
 		try (FileWriter writer = new FileWriter(filePath)) {
