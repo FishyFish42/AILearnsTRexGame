@@ -1,4 +1,4 @@
-package neuralNetworkVT;
+package neuralNetworkV7;
 
 import javax.swing.*;
 import java.awt.*;

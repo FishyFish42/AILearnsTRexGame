@@ -1,4 +1,4 @@
-package neuralNetworkVT;
+package neuralNetworkV7;
 
 import java.io.FileWriter;
 import java.io.IOException;
