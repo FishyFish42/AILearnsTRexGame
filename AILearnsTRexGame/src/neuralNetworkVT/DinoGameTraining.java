@@ -79,8 +79,6 @@ public class DinoGameTraining extends JPanel implements KeyListener, Runnable {
             	dinoPlayer dino = new dinoPlayer();
             	dinoStorage.add(dino);
             }
-        	System.out.println(this.humanPlayer);
-        	System.out.println("you bum");
         }else if (humanPlayer == true){
         	totalPopulation = playerPopulation;
         	livingCount = playerPopulation;
@@ -89,8 +87,6 @@ public class DinoGameTraining extends JPanel implements KeyListener, Runnable {
             	dinoPlayer dino = new dinoPlayer();
             	dinoStorage.add(dino);
             }
-        	System.out.println(this.humanPlayer);
-        	System.out.println("you not a bum");
         }
         
         util = new Util(this);
@@ -156,6 +152,12 @@ public class DinoGameTraining extends JPanel implements KeyListener, Runnable {
 	//
     public void updateGame() {
     	
+    	//fitness score increment
+    	//this will stop the system from stalling as it would if i relied off of score alone
+    	for(dinoPlayer p : dinoStorage) {
+        	if(p.isAlive == true) p.score++;
+        }
+    	
         // Move obstacles and check collision
         Iterator<Rectangle> it = obstacles.iterator();
         while (it.hasNext()) {
@@ -165,6 +167,7 @@ public class DinoGameTraining extends JPanel implements KeyListener, Runnable {
                 it.remove();
                 realScore++;
             }
+            
             // Collision detection 
             for(dinoPlayer d : dinoStorage) {
             	if (obs.intersects(new Rectangle((int) dinoX, (int) d.dinoY, DINO_WIDTH, DINO_HEIGHT))) {
