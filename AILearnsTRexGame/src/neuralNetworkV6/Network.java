@@ -89,6 +89,8 @@ public class Network {
 			
 			List<Neuron> layer = new ArrayList<>();
 			
+			copy.numOfInputs = numOfInputs;
+			
 			if(i == 0) {
 				for(int j = 0; j < neurons.get(i).size(); j++) {			//columns for loop V1
 					layer.add(new Neuron(neurons.get(i).get(j)));

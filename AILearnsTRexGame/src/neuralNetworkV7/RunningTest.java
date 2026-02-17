@@ -1,4 +1,4 @@
-package neuralNetworkVT;
+package neuralNetworkV7;
 
 /* V7 - Changelog:
  * No big changes to the neural network inner workings this time. This update is paving the way for and implementing a child network population

@@ -1,4 +1,4 @@
-package neuralNetworkV6;
+package neuralNetworkV7;
 
 import java.util.List;
 import java.util.Random;
@@ -44,6 +44,7 @@ public class Neuron {
 	//Specifically used for the childNetwork
 	 public Neuron(Neuron n) {
 		 this.bias = n.bias;
+
 		 this.Weights = n.Weights.clone();
 	 }
 	

@@ -1,4 +1,4 @@
-package neuralNetworkVT;
+package neuralNetworkV7;
 
 import java.util.ArrayList;
 import java.util.List;

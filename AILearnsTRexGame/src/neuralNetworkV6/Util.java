@@ -15,7 +15,7 @@ public class Util {
 
 	//USER CHANGEABLE VARIABLES
 	//ALWAYS double check these before starting.
-	int maxEpoch = 2000;
+	int maxEpoch = 500;
 	int[] layerSizes = {8, 8, 2}; 							//Last number must ALWAYS be the number of outputs (2)(jump and crouch). Also be aware of the number of inputs into the system.
 	
 	//String saveFilePath = "bestEpochV2.txt"; 				//Only needed if going off of a save file. This is broken in this version
