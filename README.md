@@ -1,12 +1,12 @@
-Author: C.T.Fish
+Code Author: C.T.Fish
 
-This project is a custom-built AI system designed to play a Chrome‑Dino–style side‑scrolling game using self‑designed neural networks and evolutionary learning.
+This project is a custom-built AI system designed to play a Chrome‑Dino–style side‑scrolling game using neural networks and evolutionary learning.
 The entire architecture is implemented from scratch in Java.
 The goal of the project is to explore:
 - How neural networks function at their core
 - How to design scalable AI systems without external ML libraries
 - How to build different types of ML architectures (Basic MLP, DQN, Image recognition, etc)
-This repository contains multiple model versions as the architecture evolves, along with the environment (Primarily the "dino game" and training utilities.
+This repository contains multiple model versions as the architecture evolves, along with the environment (Primarily the "dino game" and training utilities).
 
 Repository Navigation
 - "AILearnsTRexGame" is my first look into AI and consists of a home-made chrome dinosaur game and a MLP
@@ -32,5 +32,5 @@ AILearnsTRexGame Neural Network Architecture
   - Real‑time decision making (jump/crouch)
   - Input normalization for consistent predictions
   - Obstacle distance calculations
-  - Per‑agent physics and state tracking (for population mode)
+  - Per‑agent physics and state tracking (for populations of children)
 
